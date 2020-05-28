@@ -8,16 +8,35 @@ struct HeapA
     A* a;
 };
 
+
+struct IntType;
+struct DoubleType;
+
 struct FloatType
 {
     using T = FloatType;
+    using F = FloatType;
+    using I = IntType&;
+    using D = DoubleType;
 
     FloatType(float f) : value( new float(f) ) { }
     ~FloatType() { delete value; }
 
     T& add(float v) { *value += v; return *this; }
+    T& add( F& ft ) { return add(*ft.value); }
+    T& add( I& it );
+    T& add( D& dt );
+
     T& subtract(float v) { *value -= v; return *this; }
+    T& subtract( F& ft ) { return subtract(*ft.value); }
+    T& subtract( I& it );
+    T& subtract( D& dt );
+
     T& multiply(float v) { *value *= v; return *this; }
+    T& multiply( F& ft ) { return multiply(*ft.value); }
+    T& multiply( I& it );
+    T& multiply( D& dt );
+
     T& divide(float v) { 
         if( v == 0.f )
             std::cout << "warning: floating point division by zero!\n";
@@ -25,6 +44,9 @@ struct FloatType
         *value /= v; 
         return *this; 
     }
+    T& divide( F& ft ) { return multiply(*ft.value); }
+    T& divide( I& it );
+    T& divide( D& dt );
 
     float* value;
 };
@@ -32,13 +54,28 @@ struct FloatType
 struct DoubleType
 {
     using T = DoubleType;
+    using F = FloatType;
+    using I = IntType&;
+    using D = DoubleType;
 
     DoubleType(double f) : value( new double(f) ) { }
     ~DoubleType() { delete value; }
 
     T& add(double v) { *value += v; return *this; }
+    T& add( F& ft ) { return add(*ft.value); }
+    T& add( I& it );
+    T& add( D& dt ) { return add(*dt.value); }
+
     T& subtract(double v) { *value -= v; return *this; }
+    T& subtract( F& ft ) { return subtract(*ft.value); }
+    T& subtract( I& it );
+    T& subtract( D& dt ) { return subtract(*dt.value); }
+
     T& multiply(double v) { *value *= v; return *this; }
+    T& multiply( F& ft ) { return multiply(*ft.value); }
+    T& multiply( I& it );
+    T& multiply( D& dt ) { return multiply(*dt.value); }
+
     T& divide(double v) { 
         if( v == 0.0 )
             std::cout << "warning: floating point division by zero!\n";
@@ -46,20 +83,37 @@ struct DoubleType
         *value /= v; 
         return *this; 
     }
-
+    T& divide( F& ft ) { return multiply(*ft.value); }
+    T& divide( I& it );
+    T& divide( D& dt ) { return multiply(*dt.value); }
     double* value;
 };
 
 struct IntType
 {
     using T = IntType;
+    using F = FloatType;
+    using I = IntType&;
+    using D = DoubleType;
 
     IntType(int f) : value( new int(f) ) { }
     ~IntType() { delete value; }
 
     T& add(int v) { *value += v; return *this; }
+    T& add( F& ft ) { return add(*ft.value); }
+    T& add( I& it ) { return subtract(*it.value); }
+    T& add( D& dt ) { return add(*dt.value); }
+
     T& subtract(int v) { *value -= v; return *this; }
+    T& subtract( F& ft ) { return subtract(*ft.value); }
+    T& subtract( I& it ) { return subtract(*it.value); }
+    T& subtract( D& dt ) { return subtract(*dt.value); }
+
     T& multiply(int v) { *value *= v; return *this; }
+    T& multiply( F& ft ) { return multiply(*ft.value); }
+    T& multiply( I& it ) { return multiply(*it.value); }
+    T& multiply( D& dt ) { return multiply(*dt.value); }
+
     T& divide(int v) { 
         if( v == 0 )
         {
@@ -72,8 +126,29 @@ struct IntType
         
         return *this; 
     }
+    T& divide( F& ft ) { return multiply(*ft.value); }
+    T& divide( I& it ) { return divide(*it.value); }
+    T& divide( D& dt ) { return divide(*dt.value); }
+
     int* value;
 };
+
+FloatType& FloatType::add( I& it ) { return add(*it.value); }
+FloatType& FloatType::add( D& dt ) { return add(*dt.value); }
+
+FloatType& FloatType::subtract( I& it ) { return subtract(*it.value); }
+FloatType& FloatType::subtract( D& dt ) { return subtract(*dt.value); }
+
+FloatType& FloatType::multiply( I& it ) { return multiply(*it.value); }
+FloatType& FloatType::multiply( D& dt ) { return multiply(*dt.value); }
+
+FloatType& FloatType::divide( I& it ) { return divide(*it.value); }
+FloatType& FloatType::divide( D& dt ) { return divide(*dt.value); }
+
+DoubleType& DoubleType::add(IntType& it) { return add(*it.value); }
+DoubleType& DoubleType::subtract(IntType& it) { return subtract(*it.value); }
+DoubleType& DoubleType::multiply(IntType& it) { return multiply(*it.value); }
+DoubleType& DoubleType::divide(IntType& it) { return divide(*it.value); }
 
 #include <iostream>
 
@@ -115,7 +190,7 @@ int main()
     std::cout << "Initial value of it: " << *(it.value) << std::endl;
     // --------
     std::cout << "Use of function concatenation (mixed type arguments) " << std::endl;
-    std::cout << "New value of dt = (dt * it) / 5.0f + ft = " << *(dt.multiply(*it.value).divide(5.0f).add(*ft.value).value) << std::endl;
+    std::cout << "New value of dt = (dt * it) / 5.0f + ft = " << *(dt.multiply(it).divide(5.0f).add(ft).value) << std::endl;
 
     std::cout << "---------------------\n" << std::endl; 
     
